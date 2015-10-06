@@ -1,4 +1,4 @@
-// # include <DynamixelSerial.h>
+// #include <DynamixelSerial.h>
 // # include <Arduino.h>
 # include <avr/io.h>
 
@@ -47,16 +47,16 @@ void USART_Parity (unsigned int state) {
 //----------------------------------------
 
 void setup() {
-  // Dynamixel.begin(1000000,2); //2=data control
-	USART_Init(9600);
+//   Dynamixel.begin(1000000,2); //2=data control
+	USART_Init(103);
 }
 
 void loop() {
 	int position = 500;
 
-  //Dynamixel.move(3,position);
-
-	USART_Transmit('1');
-	USART_Transmit('\n');
+  Dynamixel.move(3,position);
+	USART_Transmit('3');
+	USART_Transmit('8');
 	delay(100);
 }
+
