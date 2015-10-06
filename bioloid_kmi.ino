@@ -44,6 +44,18 @@ void USART_Parity (unsigned int state) {
 	UCSR1C = (state << UPM11);
 }
 
+void TXRX_SendString (char* string) {
+	int letter = 0;
+
+	while (string[letter] != '\0') {
+		USART_Transmit(string[letter]);
+		letter++;
+	}
+}
+
+void TXRX_SendHex (int hex) {
+	
+}
 //----------------------------------------
 
 void setup() {
@@ -54,7 +66,7 @@ void setup() {
 void loop() {
 	int position = 500;
 
-  Dynamixel.move(3,position);
+//  Dynamixel.move(3,position);
 	USART_Transmit('3');
 	USART_Transmit('8');
 	delay(100);
