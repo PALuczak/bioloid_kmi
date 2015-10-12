@@ -54,21 +54,25 @@ void TXRX_SendString (char* string) {
 }
 
 void TXRX_SendHex (int hex) {
+	USART_Transmit(hex); // not working as intended
+}
+
+long TXRX_ReceiveHex () {
 	
 }
 //----------------------------------------
 
 void setup() {
-//   Dynamixel.begin(1000000,2); //2=data control
 	USART_Init(103);
+	//ATMEL manual: p208, p191
 }
 
 void loop() {
-	int position = 500;
 
-//  Dynamixel.move(3,position);
-	USART_Transmit('3');
-	USART_Transmit('8');
-	delay(100);
+	//USART_Transmit('2');
+	TXRX_SendString("Test String, please ignore\n\r");
+	//TXRX_SendHex(15);
+
+	delay(1000);
 }
 
