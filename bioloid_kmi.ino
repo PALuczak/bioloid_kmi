@@ -9,14 +9,14 @@ void USART_Init( unsigned int baud ) {
 	//UBRRL = (unsigned char)baud;
 	UBRR1 = (unsigned char)baud;
 	/* Enable receiver and transmitter */
-	UCSR1B = (1<<RXEN1)|(1<<TXEN1);
+	UCSR1B = (1 << RXEN1) | (1 << TXEN1);
 	/* Set frame format: 8data, 2stop bit */
-	UCSR1C = (1<<USBS1)|(3<<UCSZ10);
+	UCSR1C = (1 << USBS1) | (3 << UCSZ10);
 }
 void USART_Transmit( unsigned char data ) {
 	/* use for 5 to 8 data bits */
 	/* Wait for empty transmit buffer */
-	while ( !( UCSR1A & (1<<UDRE1)));
+	while ( !( UCSR1A & (1 << UDRE1)));
 	/* Put data into buffer, sends the data */
 	UDR1 = data;
 }
@@ -24,7 +24,7 @@ void USART_Transmit( unsigned char data ) {
 unsigned char USART_Receive( void ) {
 	/* use for 5 to 8 data bits */
 	/* Wait for data to be received */
-	while ( !(UCSR1A & (1<<RXC1)) );
+	while ( !(UCSR1A & (1 << RXC1)) );
 	/* Get and return received data from buffer */
 	return UDR1;
 }
@@ -32,14 +32,14 @@ unsigned char USART_Receive( void ) {
 void USART_Flush( void ) {
 	/* flushes receive buffer */
 	unsigned char dummy;
-	while ( UCSR1A & (1<<RXC1) ) dummy = UDR1;
+	while ( UCSR1A & (1 << RXC1) ) dummy = UDR1;
 }
 
 // written by me
 void USART_Parity (unsigned int state) {
-	/* enables/disables insertion of parity bit between the last data bit and 
+	/* enables/disables insertion of parity bit between the last data bit and
 	the first stop bit of the frame that is sent */
-	if((state != 1) || (state != 0)) return;
+	if ((state != 1) || (state != 0)) return;
 
 	UCSR1C = (state << UPM11);
 }
@@ -53,13 +53,91 @@ void TXRX_SendString (char* string) {
 	}
 }
 
-void TXRX_SendHex (int hex) {
-	USART_Transmit(hex); // not working as intended
+void TXRX_ReceiveString (char* storage) {
+	int length = 0; //initial length
+	char temp = '\0';
+
+	do {
+		temp = USART_Receive();
+		storage = (char*)realloc(storage, (length + 1) * sizeof(char));
+		storage[length] = temp;
+		length++;
+	} while (temp != '\0');
 }
 
-long TXRX_ReceiveHex () {
-	
-}
+class DXL {
+private:
+	uint8_t* TXpacket;
+	uint8_t TXlength;
+	uint8_t TXID;
+	uint8_t TXinstruction;
+	uint8_t* TXparameter;
+	int TXparameterlength;
+
+	uint8_t* RXpacket;
+
+	uint8_t CalcChecksum(int bytes, int *bytevals[]) {
+		int checksum = 0;
+		for (int counter = 0; counter < bytes; counter++) {
+			checksum += (*bytevals)[counter];
+		}
+		if (checksum < 0xFF) {
+			checksum = CalcLowbyte(checksum);
+		}
+		return (uint8_t)~checksum;
+	}
+public:
+	void TXSetLength(uint8_t length) {
+		TXlength = length;
+	}
+	void TXSetId(uint8_t ID) {
+		TXID = ID;
+	}
+	void TXSetInstruction(uint8_t instruction) {
+		TXinstruction = instruction;
+	}
+	void TXSetParameter(uint8_t index, uint8_t value) {
+		if (index >= TXparameterlength) {
+			TXparameter = (uint8_t*) realloc(TXparameter, (index + 1) * sizeof(uint8_t));
+			TXparameterlength = index + 1;
+		}
+		*(TXparameter+index) = value;
+	}
+
+	int RXGetLength();
+	int RXGetError();
+	int RXGetParameter();
+
+	void TXSend();
+	void RXReceive();
+
+	uint8_t CalcHighbyte(int word) {
+		return word >> 8;
+	}
+	uint8_t CalcLowbyte(int word) {
+		return word && 0xFF;
+	}
+
+	DXL() {
+		TXpacket = NULL;
+		RXpacket = NULL;
+		TXparameter = NULL;
+		TXinstruction = 0;
+		TXID = 0;
+		TXlength = 0;
+		TXparameterlength = 0;
+	}
+
+	~DXL() {
+		free(TXpacket);
+		free(RXpacket);
+		free(TXparameter);
+		TXpacket = NULL;
+		RXpacket = NULL;
+		TXparameter = NULL;
+	}
+};
+
 //----------------------------------------
 
 void setup() {
