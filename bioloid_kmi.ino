@@ -64,7 +64,7 @@ void TXRX_ReceiveString (char* storage) {
 		length++;
 	} while (temp != '\0');
 }
-
+// above functions will be moved to a private method in DXL class
 class DXL {
 private:
 	uint8_t* TXpacket;
@@ -101,7 +101,7 @@ public:
 			TXparameter = (uint8_t*) realloc(TXparameter, (index + 1) * sizeof(uint8_t));
 			TXparameterlength = index + 1;
 		}
-		*(TXparameter+index) = value;
+		*(TXparameter + index) = value;
 	}
 
 	int RXGetLength();
@@ -111,12 +111,12 @@ public:
 	void TXSend();
 	void RXReceive();
 
-	uint8_t CalcHighbyte(int word) {
-		return word >> 8;
-	}
-	uint8_t CalcLowbyte(int word) {
-		return word && 0xFF;
-	}
+	// uint8_t CalcHighbyte(int word) {
+	// 	return word >> 8;
+	// }
+	// uint8_t CalcLowbyte(int word) {
+	// 	return word && 0xFF;
+	// }
 
 	DXL() {
 		TXpacket = NULL;
@@ -138,19 +138,48 @@ public:
 	}
 };
 
+uint8_t CalcHighbyte(int word) {
+	return word >> 8;
+}
+uint8_t CalcLowbyte(int word) {
+	return word && 0xFF;
+}
+
 //----------------------------------------
 
 void setup() {
 	USART_Init(103);
 	//ATMEL manual: p208, p191
+
+	// set baud in servo
+	USART_Transmit(0xFF);
+	USART_Transmit(0xFF); // header
+	USART_Transmit(0x03); // id
+	USART_Transmit(0x04); // length
+	USART_Transmit(0x03); // instruction
+	USART_Transmit(0x04); // baud
+	USART_Transmit(0xCF); // value (207 in decimal)
+	USART_Transmit(0x22); // checksum
 }
 
 void loop() {
-
 	//USART_Transmit('2');
-	TXRX_SendString("Test String, please ignore\n\r");
+	//TXRX_SendString("Test String, please ignore\n\r");
 	//TXRX_SendHex(15);
+	// write
+	USART_Transmit(0xFF);
+	USART_Transmit(0xFF); // header
+	USART_Transmit(0x03); // id
+	USART_Transmit(0x06); // length
+	USART_Transmit(0x03); // instruction
+	USART_Transmit(0x30); // goal position low
+	USART_Transmit(0x33); // value
+	USART_Transmit(0x31); // goal position high
+	USART_Transmit(0x00); // value
+	USART_Transmit(0x5F); // checksum
 
+	// the above attempt to comunicate with servo failed
+	// possibly due to bad baudrate or another unknown problem
 	delay(1000);
 }
 
