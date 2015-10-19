@@ -64,7 +64,7 @@ void TXRX_ReceiveString (char* storage) {
 		length++;
 	} while (temp != '\0');
 }
-// above functions will be moved to a private method in DXL class
+// above functions will be moved to a private method in DXL class once communication is achieved
 class DXL {
 private:
 	uint8_t* TXpacket;
@@ -148,18 +148,20 @@ uint8_t CalcLowbyte(int word) {
 //----------------------------------------
 
 void setup() {
-	USART_Init(103);
+	USART_Init(103); // 9600
+	//USART_Init(8); // 115.2k
 	//ATMEL manual: p208, p191
 
 	// set baud in servo
 	USART_Transmit(0xFF);
 	USART_Transmit(0xFF); // header
-	USART_Transmit(0x03); // id
+	USART_Transmit(0x01); // id
 	USART_Transmit(0x04); // length
 	USART_Transmit(0x03); // instruction
 	USART_Transmit(0x04); // baud
-	USART_Transmit(0xCF); // value (207 in decimal)
-	USART_Transmit(0x22); // checksum
+	USART_Transmit(0xCF); // value (207 in decimal) //9600
+	//USART_Transmit(0x10); // 16 in decimal // 115.2k
+	USART_Transmit(0x24); // checksum
 }
 
 void loop() {
@@ -169,14 +171,14 @@ void loop() {
 	// write
 	USART_Transmit(0xFF);
 	USART_Transmit(0xFF); // header
-	USART_Transmit(0x03); // id
+	USART_Transmit(0x01); // id
 	USART_Transmit(0x06); // length
 	USART_Transmit(0x03); // instruction
 	USART_Transmit(0x30); // goal position low
-	USART_Transmit(0x33); // value
+	USART_Transmit(0x93); // value
 	USART_Transmit(0x31); // goal position high
 	USART_Transmit(0x00); // value
-	USART_Transmit(0x5F); // checksum
+	USART_Transmit(0x01); // checksum
 
 	// the above attempt to comunicate with servo failed
 	// possibly due to bad baudrate or another unknown problem
