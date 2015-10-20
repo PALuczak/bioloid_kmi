@@ -173,41 +173,52 @@ void setup() {
 uint8_t tx_buffer[32] = {0xFF, 0xFF};
 uint8_t* tx_buffe_write_ptr = NULL;
 
-enum class AXInstruction : uint8_t
+class AXInstruction
 {
-	Ping = 0x01,
-	ReadData = 0x02,
-	WriteData = 0x03,
-	RegWrite = 0x04,
-	Action = 0x05,
-	Reset = 0x06,
-	SyncWrite = 0x83
+public:
+  enum Type : uint8_t
+  {
+  	Ping = 0x01,
+  	ReadData = 0x02,
+  	WriteData = 0x03,
+  	RegWrite = 0x04,
+  	Action = 0x05,
+  	Reset = 0x06,
+  	SyncWrite = 0x83
+  };
 };
 
-enum class AXParameter : uint8_t
+class AXParameter
 {
-	// ............
-	
-	ID = 0x03,
-	BaudRate = 0x04,
-	
-	GoalPosition_LoByte = 0x1e,
-	GoalPosition_HiByte = 0x1f,
-	
-	// .............
+  public:
+    enum Type : uint8_t
+    {
+      
+      // ............
+      
+      ID = 0x03,
+      BaudRate = 0x04,
+      
+      GoalPosition_LoByte = 0x1e,
+      GoalPosition_HiByte = 0x1f,
+      
+      // .............
+    };
 };
 
 
-inline static void ax_begin_message(uint8_t dev_id, AXInstruction instruction)
+void ax_begin_message(uint8_t dev_id, AXInstruction::Type instruction)
 {
-	tx_buffer[2] = dev_id;
-	//tx_buffer[3] = 0;
-	tx_buffer[4] = (uint8_t)instruction;
-	tx_buffe_write_ptr = tx_buffer + 5;
-	return tx_buffe_write_ptr;
+  
+  tx_buffer[2] = dev_id;
+  //tx_buffer[3] = 0;
+  tx_buffer[4] = (uint8_t)instruction;
+  tx_buffe_write_ptr = tx_buffer + 5;
+  //return tx_buffe_write_ptr;
+  
 }
 
-inline static void ax_message_set_parameter(AXParameter param, uint8_t value)
+inline static void ax_message_set_parameter(AXParameter::Type param, uint8_t value)
 {
 	tx_buffe_write_ptr[0] = (uint8_t)param;
 	tx_buffe_write_ptr[1] = value;
@@ -224,7 +235,7 @@ uint8_t ax_end_message(void)
 	uint8_t* ptr = tx_buffer + 2;
 	uint8_t len = tx_buffer[3] + 2;
 	while(len > 0)
-		crc += tx_buffer[];
+		crc += *ptr++;
 	*tx_buffe_write_ptr = (uint8_t)~crc;
 	
 	
