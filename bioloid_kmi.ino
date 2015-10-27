@@ -72,8 +72,7 @@ int TXRX_ReceivePacket (uint8_t storage[]) {
 	bool fullhead = false;
 	uint8_t checksum;
 
-	while (1) {
-		temp = (uint8_t) USART_Receive();
+	while (!(temp = (uint8_t) USART_Receive())) { // wait for input | is this a correct way of doing it?
 		storage = (uint8_t*)realloc(storage, (length + 1) * sizeof(uint8_t));
 		storage[length] = temp;
 		length++;
@@ -95,7 +94,7 @@ int TXRX_ReceivePacket (uint8_t storage[]) {
 			}
 			checksum = ~checksum;
 			if (checksum == temp) {
-				return 1;
+				return 1; //expectedlen;
 			}
 			else return 0;
 		}
@@ -195,8 +194,9 @@ void FindBaud () { //find what baud is set in the servo
 	for (index = 0; index < 9; index++) {
 		USART_Init (baud_param[index]);
 		for (packindex = 0; packindex < 6; packindex++) {
-			USART_Transmit(baud_val[packindex]);
+			USART_Transmit(packet[packindex]);
 		}
+		delay(1);
 		if (TXRX_ReceivePacket(answer) == 1) { //found baud
 			USART_Init(103);
 			USART_Transmit(0x00);
@@ -206,7 +206,9 @@ void FindBaud () { //find what baud is set in the servo
 			USART_Transmit(0x00);
 			USART_Transmit(0xFF);
 			USART_Transmit(0x00);
+			//return; // find only one baudrate
 		}
+		delay(1000);
 	}
 	USART_Init(103); // not found baud
 	USART_Transmit(0x00);
@@ -348,11 +350,11 @@ void loop() {
 	USART_Transmit(0x01); // id
 	USART_Transmit(0x06); // length
 	USART_Transmit(0x03); // instruction
-	USART_Transmit(0x1E); // goal position low	<<<<<<<<<< to nie jest adres goal position low tylko Punch Low
-	USART_Transmit(0x93); // value				<<<<<<<<<< i punch High
+	USART_Transmit(0x1E); // goal position low
+	USART_Transmit(0x93); // value
 	USART_Transmit(0x1F); // goal position high
 	USART_Transmit(0x00); // value
-	USART_Transmit(0x25); // checksum*/
+	USART_Transmit(0x25); // checksum
 
 
 	// jeszcze raz to samo, tylko w ludziej postaci :)
