@@ -12,5 +12,4 @@ void DXL_Initialize() {
 	CPU_SetUpTimer();
 	CPU_EnableRXInterrupt();
 	sei(); // enable interrupts
-
 }
