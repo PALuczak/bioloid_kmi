@@ -2,17 +2,6 @@
 # include <avr/interrupt.h>
 # include "global.h"
 
-// # define MAX_BFR_LEN 259
-
-// uint8_t TXpacket [MAX_BFR_LEN] = {0xFF, 0xFF}; // as maximum length is 0xFF + checksum etc.
-// uint8_t TXlength; // number of parameters + 2
-// uint8_t TXID; // from 0 to 253, 254 is BROADCAST_ID
-// uint8_t TXinstruction;
-// volatile uint8_t RXbuffer[MAX_BFR_LEN];
-// volatile uint8_t RXlength = 0;
-// volatile uint8_t *RXbufferptr = RXbuffer;
-// volatile uint8_t *RXbufferendptr = &RXbuffer[MAX_BFR_LEN];
-
 void USART_Init( unsigned int baud ) {
 	/* Set baud rate */
 	UBRR1 = (unsigned char)baud;
@@ -42,6 +31,7 @@ void USART_Flush( void ) {
 	/* flushes receive buffer */
 	unsigned char dummy;
 	while ( UCSR1A & (1 << RXC1) ) dummy = UDR1;
+	(void)dummy; // silence compiler warning
 }
 
 void USART_Parity (unsigned int state) {
