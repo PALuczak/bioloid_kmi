@@ -3,45 +3,72 @@
 //# include "CPU.h"
 # include "global.h"
 
-class ReceiverState {
-public:
-	enum State {
-		ReceiveHeader,
-		ReceiveID,
-		ReceiveLength,
-		ReceiveError,
-		ReceiveParameter,
-		ReceiveChecksum,
-		Finished
-	};
-};
-
-ReceiverState::State RXstate = ReceiverState::ReceiveHeader;
-
 ISR(USART1_RX_vect) { // USART receive
 	TCNT1 = 0; // reset timer 1
 	uint8_t status = UCSR1A; // check for errors (FEn, DORn, UPEn), reading this clears those flags
-	*RXbufferptr = UDR1; // reading UDR clears interrupt flag
-	RXlength++;
-	RXbufferptr++;
+	(void)status; // silence compiler warning -Wno-unused-variable flag is an alternative
+	RXdata = UDR1; // reading UDR clears interrupt flag
+
+	switch (RXstate) {
+	case ReceiverState::ReceiveHeader:
+		if (RXdata != 0xFF) {
+			RXbufferptr = RXbuffer;
+			return;
+		}
+		else {
+			*RXbufferptr = RXdata;
+			RXbufferptr += sizeof(uint8_t);
+		}
+		if (((RXbufferptr - RXbuffer) / sizeof(uint8_t)) == 2) RXstate = ReceiverState::ReceiveID;
+		break;
+	case ReceiverState::ReceiveID:
+		if (RXdata != 0xFF) { // ID of 255 impossible
+			RXbufferptr = RXbuffer;
+			RXbufferptr += sizeof(uint8_t);
+			RXstate = ReceiverState::ReceiveLength;
+			return;
+		}
+		else {
+			RXbufferptr = RXbuffer;
+		}
+		break;
+	case ReceiverState::ReceiveLength:
+		*RXbufferptr = RXdata;
+		RXbufferptr += sizeof(uint8_t);
+		RXstate = ReceiverState::ReceiveError;
+		break;
+	case ReceiverState::ReceiveError:
+
+		break;
+	case ReceiverState::ReceiveParameter:
+		break;
+	case ReceiverState::ReceiveChecksum:
+		break;
+	case ReceiverState::Finished:
+		break;
+	default:
+		break;
+	}
 }
 
 ISR(TIMER1_COMPA_vect) {
 	TCNT1 = 0; // reset timer 1
 
 	switch (RXstate) {
-	case ReceiverState::ReceiveHeader:
-		break;
-	case ReceiverState::ReceiveID:
+	case ReceiverState::Finished:
 		break;
 	default:
+		RXbufferptr = RXbuffer;
 		break;
 	}
 
-	// TODO: check buffer
-	// TODO: if ok: stop timer, leave interrupt
-	// else:
-	RXbufferptr = RXbuffer;
+	// temporary code to test if the timer works:
+	// output high
+	PORTD = (1 << PD1);
+	DDRD = (1 << DDD1);
+	// output low
+	PORTD = (0 << PD1);
+	DDRD = (1 << DDD1);
 }
 
 void CPU_SetInterruptFlag() { // unused as avr lib has sei() implemented
