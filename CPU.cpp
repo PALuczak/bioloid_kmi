@@ -30,6 +30,7 @@ ISR(USART1_RX_vect) { // USART receive
 		}
 		else {
 			RXbufferptr = RXbuffer;
+			RXstate = ReceiverState::ReceiveHeader; // reset the receiver automata
 		}
 		break;
 	case ReceiverState::ReceiveLength:
