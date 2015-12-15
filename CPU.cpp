@@ -52,23 +52,9 @@ ISR(USART1_RX_vect) { // USART receive
 }
 
 ISR(TIMER1_COMPA_vect) {
-	TCNT1 = 0; // reset timer 1
-
-	switch (RXstate) {
-	case ReceiverState::Finished:
-		break;
-	default:
-		RXbufferptr = RXbuffer;
-		break;
-	}
-
 	// temporary code to test if the timer works:
-	// output high
-	PORTD = (1 << PD1);
-	DDRD = (1 << DDD1);
-	// output low
-	PORTD = (0 << PD1);
-	DDRD = (1 << DDD1);
+
+	PORTC ^= (1 << PORTC7);
 }
 
 void CPU_SetInterruptFlag() { // unused as avr lib has sei() implemented
@@ -87,7 +73,8 @@ void CPU_EnableRXInterrupt () {
 }
 
 void CPU_SetUpTimer() {
-	TCCR1B |= ((1 << CS11) | (1 << CS12)); // set up prescaler = 64 (p.134 manual)
-	OCR1A = 250 * 100; // 250 = 1 ms // set up output compare value for interrupt
+	OCR1A = 6249; // 100 ms set up output compare value for interrupt
 	TIMSK1 |= (1 << OCIE1A); // enable interrupt on clock compare
+	TCCR1B |= (1 << WGM12); // CTC mode
+	TCCR1B |= ((0 << CS10) | (0 << CS11) | (1 << CS12)); // set up prescaler = 256 (p.134 manual)
 }
