@@ -4,9 +4,9 @@ CLOCK := 16000000UL
 SOURCES := $(wildcard *.cpp)
 OBJECTS := ${SOURCES:.cpp=.o}
 DEPENDENCIES := $(wildcard *.h)
-PORT := /dev/ttyACM*
+PORT := usb
 BAUD := 57600
-PROGRAMMER := avr109
+PROGRAMMER := usbasp
 AVRFLAGS := -F -V
 FUSES := -U lfuse:w:0xFF:m -U hfuse:w:0xD8:m -U efuse:w:0xCB:m
 AVRDUDE = avrdude $(AVRFLAGS) -c $(PROGRAMMER) -p $(DEVICE) -P $(PORT) -b $(BAUD)
