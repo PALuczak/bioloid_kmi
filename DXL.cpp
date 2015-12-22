@@ -1,6 +1,3 @@
-# include <avr/io.h>
-# include <avr/interrupt.h>
-//# include "DXL.h"
 # include "global.h"
 
 void DXL_Initialize() {

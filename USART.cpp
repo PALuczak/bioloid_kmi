@@ -1,5 +1,3 @@
-# include <avr/io.h>
-# include <avr/interrupt.h>
 # include "global.h"
 
 void USART_Init( unsigned int baud ) {
