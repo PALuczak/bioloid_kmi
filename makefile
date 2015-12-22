@@ -19,9 +19,9 @@ help:
 	@echo 'elf: compile elf file'
 	@echo 'hex: compile hex file'
 	@echo 'disasm: avr-objdump'
-	@echo 'read: read the fuse state (reset button has to be pressed before)'
+	@echo 'read: read the fuse state'
 	@echo 'clean: remove created files'
-	@echo 'install: install hex file (reset button has to be pressed before)'
+	@echo 'install: install hex file'
 
 all: hex
 
