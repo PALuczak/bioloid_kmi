@@ -1,51 +1,64 @@
-# include <avr/io.h>
-# include <avr/interrupt.h>
-//# include "CPU.h"
 # include "global.h"
 
 ISR(USART1_RX_vect) { // USART receive
 	TCNT1 = 0; // reset timer 1
 	uint8_t status = UCSR1A; // check for errors (FEn, DORn, UPEn), reading this clears those flags
-	(void)status; // silence compiler warning -Wno-unused-variable flag is an alternative
 	RXdata = UDR1; // reading UDR clears interrupt flag
+
+	if (status & (_BV(FE1) | _BV(DOR1) | _BV(UPE1))) {
+		return;
+	}
 
 	switch (RXstate) {
 	case ReceiverState::ReceiveHeader:
+		RXchecksum = 0;
+		RXparamCounter = 0;
+		RXheadersize = 0;
+		RXparametersptr = NULL;
 		if (RXdata != 0xFF) {
-			RXbufferptr = RXbuffer;
+			RXheadersize = 0;
 			return;
 		}
 		else {
-			*RXbufferptr = RXdata;
-			RXbufferptr += sizeof(uint8_t);
+			RXheadersize++;
 		}
-		if (((RXbufferptr - RXbuffer) / sizeof(uint8_t)) == 2) RXstate = ReceiverState::ReceiveID;
+		if (RXheadersize == 2) RXstate = ReceiverState::ReceiveID;
 		break;
 	case ReceiverState::ReceiveID:
 		if (RXdata != 0xFF) { // ID of 255 impossible
-			RXbufferptr = RXbuffer;
-			RXbufferptr += sizeof(uint8_t);
+			RXID = RXdata;
+			RXchecksum += RXdata;
 			RXstate = ReceiverState::ReceiveLength;
 			return;
 		}
 		else {
-			RXbufferptr = RXbuffer;
 			RXstate = ReceiverState::ReceiveHeader; // reset the receiver automata
 		}
 		break;
 	case ReceiverState::ReceiveLength:
-		*RXbufferptr = RXdata;
-		RXbufferptr += sizeof(uint8_t);
+		RXlength = RXdata;
+		RXchecksum += RXdata;
 		RXstate = ReceiverState::ReceiveError;
+		if (RXlength < 2) RXstate = ReceiverState::ReceiveHeader;
 		break;
 	case ReceiverState::ReceiveError:
-
+		RXerror  = RXdata;
+		RXchecksum += RXdata;
+		RXstate = ReceiverState::ReceiveParameter;
+		if (RXlength == 2) RXstate = ReceiverState::ReceiveChecksum;
 		break;
 	case ReceiverState::ReceiveParameter:
+		if (RXparametersptr == NULL) RXparametersptr = RXparameters;
+		*RXparametersptr = RXdata;
+		RXparametersptr += sizeof(uint8_t);
+		RXparamCounter++;
+		RXchecksum += RXdata;
+		if (RXparamCounter == RXlength - 2) RXstate = ReceiverState::ReceiveChecksum;
 		break;
 	case ReceiverState::ReceiveChecksum:
-		break;
-	case ReceiverState::Finished:
+		RXchecksum = ~RXchecksum;
+		if (RXdata != RXchecksum) RXstate = ReceiverState::ReceiveHeader;
+		else RXstate = ReceiverState::Finished;
 		break;
 	default:
 		break;
@@ -53,9 +66,8 @@ ISR(USART1_RX_vect) { // USART receive
 }
 
 ISR(TIMER1_COMPA_vect) {
-	// temporary code to test if the timer works:
-
 	PORTC ^= (1 << PORTC7);
+	RXstate = ReceiverState::ReceiveHeader;
 }
 
 void CPU_SetInterruptFlag() { // unused as avr lib has sei() implemented
