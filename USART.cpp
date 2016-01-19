@@ -7,6 +7,7 @@ void USART_Init( unsigned int baud ) {
 	UCSR1B = (1 << RXEN1) | (1 << TXEN1);
 	/* Set frame format: 8data, 2stop bit */
 	UCSR1C = (1 << USBS1) | (3 << UCSZ10);
+	//UCSR1C = (1 << UCSZ10) | (1 << UCSZ11); // 8data, 1stop bit
 }
 
 void USART_Transmit( unsigned char data ) {

@@ -4,8 +4,10 @@ ISR(USART1_RX_vect) { // USART receive
 	TCNT1 = 0; // reset timer 1
 	uint8_t status = UCSR1A; // check for errors (FEn, DORn, UPEn), reading this clears those flags
 	RXdata = UDR1; // reading UDR clears interrupt flag
-
-	if (status & (_BV(FE1) | _BV(DOR1) | _BV(UPE1))) {
+	
+	PORTC ^= (1 << PORTC7);
+	
+	if (status & ((1 << FE1) | (1 << DOR1) | (1 << UPE1))) {
 		return;
 	}
 
@@ -59,6 +61,7 @@ ISR(USART1_RX_vect) { // USART receive
 		RXchecksum = ~RXchecksum;
 		if (RXdata != RXchecksum) RXstate = ReceiverState::ReceiveHeader;
 		else RXstate = ReceiverState::Finished;
+		//PORTD ^= (1 << PORTD7);
 		break;
 	default:
 		break;
@@ -66,7 +69,7 @@ ISR(USART1_RX_vect) { // USART receive
 }
 
 ISR(TIMER1_COMPA_vect) {
-	PORTC ^= (1 << PORTC7);
+	//PORTC ^= (1 << PORTC7);
 	RXstate = ReceiverState::ReceiveHeader;
 }
 

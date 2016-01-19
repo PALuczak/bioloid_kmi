@@ -1,11 +1,15 @@
 # include <avr/io.h>
 # include <avr/interrupt.h>
+# include <util/delay.h>
 # include "DXL.h"
 # include "USART.h"
 # include "CPU.h"
+# include "SoftSerial.h"
 
 # ifndef GLOBAL_H
 # define GLOBAL_H
+
+#define F_CPU 16000000UL
 
 # define MAX_BFR_LEN 253  // as maximum length is 0xFF=N+2
 # define BROADCAST_ID 254
